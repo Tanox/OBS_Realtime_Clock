@@ -1,73 +1,73 @@
-# OBS Realtime Clock Script
+# OBS 实时日期时间脚本
 
-A powerful Lua script for OBS Studio that displays real-time date and time with extensive customization options.
+一个功能强大的 OBS Studio Lua 脚本，用于显示实时日期和时间，提供丰富的自定义选项。
 
-## Features
+## 功能特性
 
-- **Text Source Association**: Link to any text source in your OBS scene
-- **Multiple Format Presets**: Choose from 7 predefined date/time formats
-- **Custom Format Support**: Create your own format using standard date/time specifiers
-- **Timezone Support**: Local timezone or UTC
-- **Flexible Update Interval**: 50ms to 5000ms
-- **Visual Customization**: Font size, color, and face
-- **Show/Hide Elements**: Toggle seconds, date, and time
-- **Custom Separators**: Modify date and time separators
-- **Prefix/Suffix**: Add custom text before and after the clock
-- **Uppercase Option**: Display text in all caps
-- **Alignment**: Left, center, or right alignment
+- **文本源关联**: 可关联到 OBS 场景中的任意文本源
+- **多种格式预设**: 7 种预定义的日期/时间格式可选
+- **自定义格式支持**: 使用标准日期/时间格式符创建你自己的格式
+- **时区支持**: 本地时区或 UTC
+- **灵活的更新间隔**: 50ms 到 5000ms
+- **视觉自定义**: 字体大小、颜色和字体
+- **显示/隐藏元素**: 可切换秒、日期和时间的显示
+- **自定义分隔符**: 修改日期和时间的分隔符
+- **前缀/后缀**: 在时钟前后添加自定义文本
+- **大写选项**: 全大写显示
+- **对齐方式**: 左对齐、居中或右对齐
 
-## Installation
+## 安装
 
-1. Download `realtime_clock.lua`
-2. Open OBS Studio
-3. Go to Tools → Scripts
-4. Click the "+" button
-5. Select `realtime_clock.lua`
-6. Configure the script settings
+1. 下载 `realtime_clock.lua`
+2. 打开 OBS Studio
+3. 进入 工具 → 脚本
+4. 点击 "+" 按钮
+5. 选择 `realtime_clock.lua`
+6. 配置脚本设置
 
-## Usage
+## 使用方法
 
-### Basic Setup
+### 基本设置
 
-1. Create a Text source in your OBS scene (GDI+ Text or FreeType 2 Text)
-2. Open the Scripts window (Tools → Scripts)
-3. Select the "Realtime Clock" script
-4. Choose your text source from the "文本源" dropdown
-5. Customize settings as desired
+1. 在 OBS 场景中创建一个文本源（GDI+ 文本或 FreeType 2 文本）
+2. 打开脚本窗口（工具 → 脚本）
+3. 选择 "实时日期时间" 脚本
+4. 从 "文本源" 下拉菜单中选择你的文本源
+5. 根据需要自定义设置
 
-### Format Specifiers
+### 格式说明符
 
-Use these in custom formats:
+在自定义格式中使用以下格式符：
 
-| Specifier | Description | Example |
-|-----------|-------------|---------|
-| %Y | 4-digit year | 2024 |
-| %y | 2-digit year | 24 |
-| %m | Month (01-12) | 05 |
-| %B | Full month name | May |
-| %b | Abbreviated month name | May |
-| %d | Day (01-31) | 23 |
-| %A | Full weekday name | Thursday |
-| %a | Abbreviated weekday name | Thu |
-| %H | Hour (00-23) | 14 |
-| %I | Hour (01-12) | 02 |
-| %M | Minute (00-59) | 30 |
-| %S | Second (00-59) | 45 |
-| %p | AM/PM indicator | PM |
+| 格式符 | 说明 | 示例 |
+|--------|------|------|
+| %Y | 4 位年份 | 2024 |
+| %y | 2 位年份 | 24 |
+| %m | 月份 (01-12) | 05 |
+| %B | 完整月份名称 | 五月 |
+| %b | 缩写月份名称 | 五 |
+| %d | 日期 (01-31) | 23 |
+| %A | 完整星期名称 | 星期四 |
+| %a | 缩写星期名称 | 四 |
+| %H | 小时 (00-23) | 14 |
+| %I | 小时 (01-12) | 02 |
+| %M | 分钟 (00-59) | 30 |
+| %S | 秒 (00-59) | 45 |
+| %p | AM/PM 标识 | 下午 |
 
-## File Structure
+## 文件结构
 
 ```
 obs_realtime_clock/
-├── realtime_clock.lua    # Main script file
-├── README.md             # English documentation
-└── README_CN.md          # Chinese documentation
+├── realtime_clock.lua    # 主脚本文件
+├── README.md             # 中文文档（默认）
+└── README_EN.md         # 英文文档
 ```
 
-## Version
+## 版本
 
 v1.0.1
 
-## License
+## 许可证
 
-MIT License
+MIT 许可证
