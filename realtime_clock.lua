@@ -1,4 +1,4 @@
--- realtime_clock.lua v1.0.0
+-- realtime_clock.lua v1.0.1
 
 local obs = obslua
 
@@ -21,8 +21,6 @@ local script_settings = {
     uppercase = false,
     alignment = "center"
 }
-
-local timer_id = nil
 
 local format_presets = {
     ["default"] = "%Y-%m-%d %H:%M:%S",
@@ -115,11 +113,8 @@ function script_update(settings)
     script_settings.uppercase = obs.obs_data_get_bool(settings, "uppercase")
     script_settings.alignment = obs.obs_data_get_string(settings, "alignment")
     
-    if timer_id ~= nil then
-        obs.timer_remove(update_clock)
-    end
-    
-    timer_id = obs.timer_add(update_clock, script_settings.update_interval)
+    obs.timer_remove(update_clock)
+    obs.timer_add(update_clock, script_settings.update_interval)
 end
 
 function script_defaults(settings)
@@ -146,22 +141,10 @@ function script_save(settings)
 end
 
 function script_unload()
-    if timer_id ~= nil then
-        obs.timer_remove(update_clock)
-    end
+    obs.timer_remove(update_clock)
 end
 
-function get_current_time()
-    local now
-    if script_settings.timezone == "utc" then
-        now = os.time(os.date("!*t"))
-    else
-        now = os.time()
-    end
-    return now
-end
-
-function format_time(timestamp)
+function format_time()
     local format_str
     
     if script_settings.format_type == "custom" then
@@ -170,29 +153,31 @@ function format_time(timestamp)
         format_str = format_presets[script_settings.format_type] or format_presets["default"]
     end
     
+    format_str = format_str:gsub("%%Y%-%%m%-%%d", "%%Y" .. script_settings.date_separator .. "%%m" .. script_settings.date_separator .. "%%d")
+    format_str = format_str:gsub("%%m/%%d/%%Y", "%%m" .. script_settings.date_separator .. "%%d" .. script_settings.date_separator .. "%%Y")
+    format_str = format_str:gsub("%%H:%%M:%%S", "%%H" .. script_settings.time_separator .. "%%M" .. script_settings.time_separator .. "%%S")
+    format_str = format_str:gsub("%%I:%%M:%%S", "%%I" .. script_settings.time_separator .. "%%M" .. script_settings.time_separator .. "%%S")
+    format_str = format_str:gsub("%%H:%%M", "%%H" .. script_settings.time_separator .. "%%M")
+    format_str = format_str:gsub("%%I:%%M", "%%I" .. script_settings.time_separator .. "%%M")
+    
     if not script_settings.show_seconds then
-        format_str = format_str:gsub("%%S", ""):gsub(":%s*$", ""):gsub("%s+$", "")
+        format_str = format_str:gsub("%%S", ""):gsub(script_settings.time_separator .. "%s*$", ""):gsub("%s+$", "")
     end
     
     if not script_settings.show_date then
-        format_str = format_str:gsub("%%[YyMmDd]", ""):gsub("%%[Aa]", ""):gsub("%%[Bb]", ""):gsub("[^%%]*%%[xX]", ""):gsub("^%s+", ""):gsub("%s+$", "")
+        format_str = format_str:gsub("%%[Yy]", ""):gsub("%%m", ""):gsub("%%d", ""):gsub("%%[Aa]", ""):gsub("%%[Bb]", ""):gsub("%%[xX]", ""):gsub("^%s+", ""):gsub("%s+$", "")
     end
     
     if not script_settings.show_time then
-        format_str = format_str:gsub("%%[HhIiMmSs]", ""):gsub("%%[pP]", ""):gsub("[^%%]*%%[xX]", ""):gsub("^%s+", ""):gsub("%s+$", "")
+        format_str = format_str:gsub("%%[Hh]", ""):gsub("%%[Ii]", ""):gsub("%%M", ""):gsub("%%S", ""):gsub("%%[pP]", ""):gsub("%%[xX]", ""):gsub("^%s+", ""):gsub("%s+$", "")
     end
     
-    if script_settings.date_separator ~= "-" then
-        format_str = format_str:gsub("%%Y-%%m-%%d", "%%Y" .. script_settings.date_separator .. "%%m" .. script_settings.date_separator .. "%%d")
-        format_str = format_str:gsub("%%m/%%d/%%Y", "%%m" .. script_settings.date_separator .. "%%d" .. script_settings.date_separator .. "%%Y")
+    local result
+    if script_settings.timezone == "utc" then
+        result = os.date("!" .. format_str, os.time())
+    else
+        result = os.date(format_str, os.time())
     end
-    
-    if script_settings.time_separator ~= ":" then
-        format_str = format_str:gsub("%%H:%%M:%%S", "%%H" .. script_settings.time_separator .. "%%M" .. script_settings.time_separator .. "%%S")
-        format_str = format_str:gsub("%%I:%%M:%%S", "%%I" .. script_settings.time_separator .. "%%M" .. script_settings.time_separator .. "%%S")
-    end
-    
-    local result = os.date(format_str, timestamp)
     
     result = script_settings.prefix .. result .. script_settings.suffix
     
@@ -210,8 +195,7 @@ function update_clock()
     
     local source = obs.obs_get_source_by_name(script_settings.text_source)
     if source ~= nil then
-        local timestamp = get_current_time()
-        local text = format_time(timestamp)
+        local text = format_time()
         
         local settings = obs.obs_data_create()
         obs.obs_data_set_string(settings, "text", text)

@@ -66,7 +66,7 @@ obs_realtime_clock/
 
 ## 版本
 
-v1.0.0
+v1.0.1
 
 ## 许可证
 
