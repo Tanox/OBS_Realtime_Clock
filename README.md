@@ -61,7 +61,11 @@
 obs_realtime_clock/
 ├── realtime_clock.lua    # 主脚本文件
 ├── README.md             # 中文文档（默认）
-└── README_EN.md         # 英文文档
+├── README_EN.md         # 英文文档
+├── CHANGELOG.md         # 更新日志（中文）
+├── CHANGELOG_EN.md     # 更新日志（英文）
+└── openspec/
+    └── project.md       # 项目规范文档
 ```
 
 ## 版本

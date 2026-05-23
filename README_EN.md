@@ -61,7 +61,11 @@ Use these in custom formats:
 obs_realtime_clock/
 ├── realtime_clock.lua    # Main script file
 ├── README.md             # Chinese documentation (default)
-└── README_EN.md         # English documentation
+├── README_EN.md         # English documentation
+├── CHANGELOG.md         # Changelog (Chinese)
+├── CHANGELOG_EN.md     # Changelog (English)
+└── openspec/
+    └── project.md       # Project specification
 ```
 
 ## Version
