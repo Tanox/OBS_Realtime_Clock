@@ -1,4 +1,4 @@
--- realtime_clock.lua v1.0.1
+-- realtime_clock.lua v1.1.0
 
 local obs = obslua
 
@@ -22,7 +22,8 @@ local UI_STRINGS = {
         update_interval = "更新间隔 (毫秒)",
         font_size = "字体大小",
         font_color = "字体颜色",
-        font_face = "字体名称",
+        font_face = "字体样式",
+        custom_font = "自定义字体",
         show_seconds = "显示秒数",
         show_date = "显示日期",
         show_time = "显示时间",
@@ -54,7 +55,8 @@ local UI_STRINGS = {
         update_interval = "Update Interval (ms)",
         font_size = "Font Size",
         font_color = "Font Color",
-        font_face = "Font Face",
+        font_face = "Font Style",
+        custom_font = "Custom Font",
         show_seconds = "Show Seconds",
         show_date = "Show Date",
         show_time = "Show Time",
@@ -79,6 +81,24 @@ local function get_ui_string(key)
     return UI_STRINGS[lang][key] or UI_STRINGS["zh"][key] or key
 end
 
+local font_presets = {
+    ["Arial"] = "Arial",
+    ["Helvetica"] = "Helvetica",
+    ["Times New Roman"] = "Times New Roman",
+    ["Georgia"] = "Georgia",
+    ["Verdana"] = "Verdana",
+    ["Courier New"] = "Courier New",
+    ["Consolas"] = "Consolas",
+    ["Impact"] = "Impact",
+    ["Comic Sans MS"] = "Comic Sans MS",
+    ["Microsoft YaHei"] = "Microsoft YaHei",
+    ["SimHei"] = "SimHei",
+    ["KaiTi"] = "KaiTi",
+    ["SimSun"] = "SimSun",
+    ["FangSong"] = "FangSong",
+    ["custom"] = "custom"
+}
+
 local script_settings = {
     ui_language = "zh",
     text_source = "",
@@ -89,6 +109,7 @@ local script_settings = {
     font_size = 48,
     font_color = 0xFFFFFFFF,
     font_face = "Arial",
+    custom_font_face = "",
     show_seconds = true,
     show_date = true,
     show_time = true,
@@ -112,6 +133,16 @@ local format_presets = {
 
 function script_description()
     return "实时日期时间显示脚本 / Realtime Clock Script\n\n丰富的设置选项，支持自定义格式、时区、字体样式等\nRich settings, custom format, timezone, font styles and more"
+end
+
+-- 字体选择回调函数，用于动态显示/隐藏自定义字体输入框
+local function font_face_callback(props, property, settings)
+    local font_face = obs.obs_data_get_string(settings, "font_face")
+    local custom_font_prop = obs.obs_properties_get(props, "custom_font_face")
+    if custom_font_prop then
+        obs.obs_property_set_visible(custom_font_prop, font_face == "custom")
+    end
+    return true
 end
 
 function script_properties()
@@ -156,7 +187,32 @@ function script_properties()
     
     obs.obs_properties_add_int(props, "font_size", get_ui_string("font_size"), 8, 200, 1)
     obs.obs_properties_add_color(props, "font_color", get_ui_string("font_color"))
-    obs.obs_properties_add_text(props, "font_face", get_ui_string("font_face"), obs.OBS_TEXT_DEFAULT)
+    
+    -- 添加字体下拉选择框
+    local font_p = obs.obs_properties_add_list(props, "font_face", get_ui_string("font_face"), obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_property_list_add_string(font_p, "Arial", "Arial")
+    obs.obs_property_list_add_string(font_p, "Helvetica", "Helvetica")
+    obs.obs_property_list_add_string(font_p, "Times New Roman", "Times New Roman")
+    obs.obs_property_list_add_string(font_p, "Georgia", "Georgia")
+    obs.obs_property_list_add_string(font_p, "Verdana", "Verdana")
+    obs.obs_property_list_add_string(font_p, "Courier New", "Courier New")
+    obs.obs_property_list_add_string(font_p, "Consolas", "Consolas")
+    obs.obs_property_list_add_string(font_p, "Impact", "Impact")
+    obs.obs_property_list_add_string(font_p, "Comic Sans MS", "Comic Sans MS")
+    obs.obs_property_list_add_string(font_p, "Microsoft YaHei", "Microsoft YaHei")
+    obs.obs_property_list_add_string(font_p, "SimHei", "SimHei")
+    obs.obs_property_list_add_string(font_p, "KaiTi", "KaiTi")
+    obs.obs_property_list_add_string(font_p, "SimSun", "SimSun")
+    obs.obs_property_list_add_string(font_p, "FangSong", "FangSong")
+    obs.obs_property_list_add_string(font_p, get_ui_string("custom_font"), "custom")
+    
+    -- 设置字体选择回调
+    obs.obs_property_set_modified_callback(font_p, font_face_callback)
+    
+    -- 添加自定义字体输入框
+    local custom_font_prop = obs.obs_properties_add_text(props, "custom_font_face", get_ui_string("custom_font"), obs.OBS_TEXT_DEFAULT)
+    -- 默认隐藏自定义字体输入框
+    obs.obs_property_set_visible(custom_font_prop, script_settings.font_face == "custom")
     
     obs.obs_properties_add_bool(props, "show_seconds", get_ui_string("show_seconds"))
     obs.obs_properties_add_bool(props, "show_date", get_ui_string("show_date"))
@@ -188,7 +244,16 @@ function script_update(settings)
     script_settings.update_interval = obs.obs_data_get_int(settings, "update_interval")
     script_settings.font_size = obs.obs_data_get_int(settings, "font_size")
     script_settings.font_color = obs.obs_data_get_int(settings, "font_color")
-    script_settings.font_face = obs.obs_data_get_string(settings, "font_face")
+    
+    -- 更新字体设置
+    local selected_font = obs.obs_data_get_string(settings, "font_face")
+    if selected_font == "custom" then
+        script_settings.font_face = obs.obs_data_get_string(settings, "custom_font_face") or "Arial"
+    else
+        script_settings.font_face = selected_font
+    end
+    script_settings.custom_font_face = obs.obs_data_get_string(settings, "custom_font_face")
+    
     script_settings.show_seconds = obs.obs_data_get_bool(settings, "show_seconds")
     script_settings.show_date = obs.obs_data_get_bool(settings, "show_date")
     script_settings.show_time = obs.obs_data_get_bool(settings, "show_time")
@@ -213,6 +278,7 @@ function script_defaults(settings)
     obs.obs_data_set_default_int(settings, "font_size", 48)
     obs.obs_data_set_default_int(settings, "font_color", 0xFFFFFFFF)
     obs.obs_data_set_default_string(settings, "font_face", "Arial")
+    obs.obs_data_set_default_string(settings, "custom_font_face", "")
     obs.obs_data_set_default_bool(settings, "show_seconds", true)
     obs.obs_data_set_default_bool(settings, "show_date", true)
     obs.obs_data_set_default_bool(settings, "show_time", true)
