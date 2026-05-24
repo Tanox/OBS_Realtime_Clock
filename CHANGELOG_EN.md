@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.1.1] - 2026-05-24
+
+### Improvements
+- Optimized language setting initialization logic, moved UI_LANG initialization from script_properties to script_load function
+- Added Lua build artifacts ignore rules to .gitignore
+- Includes ignore rules for compiled artifacts, library files, executable files and more
+
+### Documentation Updates
+- Synchronized version numbers across all documentation to v1.1.1
+
 ## [v1.1.0] - 2026-05-24
 
 ### New Features
