@@ -25,7 +25,7 @@
 - Uppercase option: Display in all caps
 - Alignment options: Left, center, right
 - Chinese interface configuration options
-- [README.md](file:///workspace/README.md) English documentation
-- [README_CN.md](file:///workspace/README_CN.md) Chinese documentation
+- [README.md](file:///workspace/README.md) Default Chinese documentation
+- [README_EN.md](file:///workspace/README_EN.md) English documentation
 - LICENSE file
 - .gitignore and .gitattributes configuration files

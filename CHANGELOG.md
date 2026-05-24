@@ -25,7 +25,7 @@
 - 大写选项：全大写显示
 - 对齐方式：左对齐、居中、右对齐
 - 中文界面配置选项
-- [README.md](file:///workspace/README.md) 英文文档
-- [README_CN.md](file:///workspace/README_CN.md) 中文文档
+- [README.md](file:///workspace/README.md) 中文默认文档
+- [README_EN.md](file:///workspace/README_EN.md) 英文文档
 - LICENSE 许可证文件
 - .gitignore 和 .gitattributes 配置文件
