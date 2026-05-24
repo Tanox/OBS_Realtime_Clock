@@ -1,5 +1,18 @@
 # Changelog
 
+## [v1.1.0] - 2026-05-24
+
+### New Features
+- Optimized font selection functionality with dropdown menu of popular fonts
+- Includes 14 popular font presets (Arial, Helvetica, Times New Roman, Georgia, Verdana, Courier New, Consolas, Impact, Comic Sans MS, Microsoft YaHei, SimHei, KaiTi, SimSun, FangSong)
+- Support for custom font input
+- Added dynamic UI: display input field when selecting custom font, hide when selecting preset font
+- Complete multi-language support (Chinese/English interface)
+
+### Improvements
+- Enhanced user experience, avoiding manual entry of common font names
+- Version updated to 1.1.0
+
 ## [v1.0.1] - 2026-05-23
 
 ### Improvements
@@ -25,7 +38,7 @@
 - Uppercase option: Display in all caps
 - Alignment options: Left, center, right
 - Chinese interface configuration options
-- [README.md](file:///workspace/README.md) English documentation
-- [README_CN.md](file:///workspace/README_CN.md) Chinese documentation
+- [README.md](file:///workspace/README.md) Default Chinese documentation
+- [README_EN.md](file:///workspace/README_EN.md) English documentation
 - LICENSE file
 - .gitignore and .gitattributes configuration files

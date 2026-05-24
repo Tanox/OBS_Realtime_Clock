@@ -1,5 +1,18 @@
 # 更新日志
 
+## [v1.1.0] - 2026-05-24
+
+### 新功能
+- 优化字体选择功能，添加常用字体下拉菜单
+- 包含 14 种常用字体预设（Arial、Helvetica、Times New Roman、Georgia、Verdana、Courier New、Consolas、Impact、Comic Sans MS、Microsoft YaHei、SimHei、KaiTi、SimSun、FangSong）
+- 支持自定义字体输入功能
+- 添加动态界面：选择自定义字体时显示输入框，选择预设字体时隐藏输入框
+- 完善多语言支持（中文/英文界面）
+
+### 改进
+- 优化用户体验，避免手动输入常用字体名称
+- 版本号更新至 1.1.0
+
 ## [v1.0.1] - 2026-05-23
 
 ### 改进
@@ -25,7 +38,7 @@
 - 大写选项：全大写显示
 - 对齐方式：左对齐、居中、右对齐
 - 中文界面配置选项
-- [README.md](file:///workspace/README.md) 英文文档
-- [README_CN.md](file:///workspace/README_CN.md) 中文文档
+- [README.md](file:///workspace/README.md) 中文默认文档
+- [README_EN.md](file:///workspace/README_EN.md) 英文文档
 - LICENSE 许可证文件
 - .gitignore 和 .gitattributes 配置文件

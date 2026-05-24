@@ -1,8 +1,106 @@
--- realtime_clock.lua v1.0.1
+-- realtime_clock.lua v1.1.0
 
 local obs = obslua
 
+local UI_LANG = "auto"
+
+local UI_STRINGS = {
+    ["zh"] = {
+        text_source = "文本源",
+        format_type = "格式类型",
+        custom_format = "自定义格式",
+        default = "默认 (YYYY-MM-DD HH:MM:SS)",
+        short_date = "短日期 (MM/DD/YYYY)",
+        long_date = "长日期",
+        ["24h_time"] = "24小时制时间",
+        ["12h_time"] = "12小时制时间",
+        datetime_short = "日期时间 (短)",
+        datetime_long = "日期时间 (长)",
+        timezone = "时区",
+        local_tz = "本地时区",
+        utc = "UTC",
+        update_interval = "更新间隔 (毫秒)",
+        font_size = "字体大小",
+        font_color = "字体颜色",
+        font_face = "字体样式",
+        custom_font = "自定义字体",
+        show_seconds = "显示秒数",
+        show_date = "显示日期",
+        show_time = "显示时间",
+        date_separator = "日期分隔符",
+        time_separator = "时间分隔符",
+        prefix = "前缀文本",
+        suffix = "后缀文本",
+        uppercase = "大写显示",
+        alignment = "对齐方式",
+        left = "左对齐",
+        center = "居中",
+        right = "右对齐",
+        custom = "自定义格式"
+    },
+    ["en"] = {
+        text_source = "Text Source",
+        format_type = "Format Type",
+        custom_format = "Custom Format",
+        default = "Default (YYYY-MM-DD HH:MM:SS)",
+        short_date = "Short Date (MM/DD/YYYY)",
+        long_date = "Long Date",
+        ["24h_time"] = "24H Time",
+        ["12h_time"] = "12H Time",
+        datetime_short = "DateTime (Short)",
+        datetime_long = "DateTime (Long)",
+        timezone = "Timezone",
+        local_tz = "Local Timezone",
+        utc = "UTC",
+        update_interval = "Update Interval (ms)",
+        font_size = "Font Size",
+        font_color = "Font Color",
+        font_face = "Font Style",
+        custom_font = "Custom Font",
+        show_seconds = "Show Seconds",
+        show_date = "Show Date",
+        show_time = "Show Time",
+        date_separator = "Date Separator",
+        time_separator = "Time Separator",
+        prefix = "Prefix Text",
+        suffix = "Suffix Text",
+        uppercase = "Uppercase",
+        alignment = "Alignment",
+        left = "Left",
+        center = "Center",
+        right = "Right",
+        custom = "Custom Format"
+    }
+}
+
+local function get_ui_string(key)
+    local lang = UI_LANG
+    if lang == "auto" then
+        lang = "zh"
+    end
+    return UI_STRINGS[lang][key] or UI_STRINGS["zh"][key] or key
+end
+
+local font_presets = {
+    ["Arial"] = "Arial",
+    ["Helvetica"] = "Helvetica",
+    ["Times New Roman"] = "Times New Roman",
+    ["Georgia"] = "Georgia",
+    ["Verdana"] = "Verdana",
+    ["Courier New"] = "Courier New",
+    ["Consolas"] = "Consolas",
+    ["Impact"] = "Impact",
+    ["Comic Sans MS"] = "Comic Sans MS",
+    ["Microsoft YaHei"] = "Microsoft YaHei",
+    ["SimHei"] = "SimHei",
+    ["KaiTi"] = "KaiTi",
+    ["SimSun"] = "SimSun",
+    ["FangSong"] = "FangSong",
+    ["custom"] = "custom"
+}
+
 local script_settings = {
+    ui_language = "zh",
     text_source = "",
     format_type = "custom",
     custom_format = "%Y-%m-%d %H:%M:%S",
@@ -11,6 +109,7 @@ local script_settings = {
     font_size = 48,
     font_color = 0xFFFFFFFF,
     font_face = "Arial",
+    custom_font_face = "",
     show_seconds = true,
     show_date = true,
     show_time = true,
@@ -33,13 +132,29 @@ local format_presets = {
 }
 
 function script_description()
-    return "实时日期时间显示脚本\n\n丰富的设置选项，支持自定义格式、时区、字体样式等"
+    return "实时日期时间显示脚本 / Realtime Clock Script\n\n丰富的设置选项，支持自定义格式、时区、字体样式等\nRich settings, custom format, timezone, font styles and more"
+end
+
+-- 字体选择回调函数，用于动态显示/隐藏自定义字体输入框
+local function font_face_callback(props, property, settings)
+    local font_face = obs.obs_data_get_string(settings, "font_face")
+    local custom_font_prop = obs.obs_properties_get(props, "custom_font_face")
+    if custom_font_prop then
+        obs.obs_property_set_visible(custom_font_prop, font_face == "custom")
+    end
+    return true
 end
 
 function script_properties()
     local props = obs.obs_properties_create()
     
-    local p = obs.obs_properties_add_list(props, "text_source", "文本源", obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING)
+    local lang_p = obs.obs_properties_add_list(props, "ui_language", "语言 / Language", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_property_list_add_string(lang_p, "中文", "zh")
+    obs.obs_property_list_add_string(lang_p, "English", "en")
+    
+    UI_LANG = obs.obs_data_get_string(obs.obs_properties_get_settings(props), "ui_language") or "zh"
+    
+    local p = obs.obs_properties_add_list(props, "text_source", get_ui_string("text_source"), obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING)
     local sources = obs.obs_enum_sources()
     if sources ~= nil then
         for _, source in ipairs(sources) do
@@ -52,49 +167,76 @@ function script_properties()
     end
     obs.source_list_release(sources)
     
-    local format_p = obs.obs_properties_add_list(props, "format_type", "格式类型", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
-    obs.obs_property_list_add_string(format_p, "自定义格式", "custom")
-    obs.obs_property_list_add_string(format_p, "默认 (YYYY-MM-DD HH:MM:SS)", "default")
-    obs.obs_property_list_add_string(format_p, "短日期 (MM/DD/YYYY)", "short_date")
-    obs.obs_property_list_add_string(format_p, "长日期", "long_date")
-    obs.obs_property_list_add_string(format_p, "24小时制时间", "24h_time")
-    obs.obs_property_list_add_string(format_p, "12小时制时间", "12h_time")
-    obs.obs_property_list_add_string(format_p, "日期时间 (短)", "datetime_short")
-    obs.obs_property_list_add_string(format_p, "日期时间 (长)", "datetime_long")
+    local format_p = obs.obs_properties_add_list(props, "format_type", get_ui_string("format_type"), obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_property_list_add_string(format_p, get_ui_string("custom"), "custom")
+    obs.obs_property_list_add_string(format_p, get_ui_string("default"), "default")
+    obs.obs_property_list_add_string(format_p, get_ui_string("short_date"), "short_date")
+    obs.obs_property_list_add_string(format_p, get_ui_string("long_date"), "long_date")
+    obs.obs_property_list_add_string(format_p, get_ui_string("24h_time"), "24h_time")
+    obs.obs_property_list_add_string(format_p, get_ui_string("12h_time"), "12h_time")
+    obs.obs_property_list_add_string(format_p, get_ui_string("datetime_short"), "datetime_short")
+    obs.obs_property_list_add_string(format_p, get_ui_string("datetime_long"), "datetime_long")
     
-    obs.obs_properties_add_text(props, "custom_format", "自定义格式", obs.OBS_TEXT_DEFAULT)
+    obs.obs_properties_add_text(props, "custom_format", get_ui_string("custom_format"), obs.OBS_TEXT_DEFAULT)
     
-    local tz_p = obs.obs_properties_add_list(props, "timezone", "时区", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
-    obs.obs_property_list_add_string(tz_p, "本地时区", "local")
-    obs.obs_property_list_add_string(tz_p, "UTC", "utc")
+    local tz_p = obs.obs_properties_add_list(props, "timezone", get_ui_string("timezone"), obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_property_list_add_string(tz_p, get_ui_string("local_tz"), "local")
+    obs.obs_property_list_add_string(tz_p, get_ui_string("utc"), "utc")
     
-    obs.obs_properties_add_int(props, "update_interval", "更新间隔 (毫秒)", 50, 5000, 50)
+    obs.obs_properties_add_int(props, "update_interval", get_ui_string("update_interval"), 50, 5000, 50)
     
-    obs.obs_properties_add_int(props, "font_size", "字体大小", 8, 200, 1)
-    obs.obs_properties_add_color(props, "font_color", "字体颜色")
-    obs.obs_properties_add_text(props, "font_face", "字体名称", obs.OBS_TEXT_DEFAULT)
+    obs.obs_properties_add_int(props, "font_size", get_ui_string("font_size"), 8, 200, 1)
+    obs.obs_properties_add_color(props, "font_color", get_ui_string("font_color"))
     
-    obs.obs_properties_add_bool(props, "show_seconds", "显示秒数")
-    obs.obs_properties_add_bool(props, "show_date", "显示日期")
-    obs.obs_properties_add_bool(props, "show_time", "显示时间")
+    -- 添加字体下拉选择框
+    local font_p = obs.obs_properties_add_list(props, "font_face", get_ui_string("font_face"), obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_property_list_add_string(font_p, "Arial", "Arial")
+    obs.obs_property_list_add_string(font_p, "Helvetica", "Helvetica")
+    obs.obs_property_list_add_string(font_p, "Times New Roman", "Times New Roman")
+    obs.obs_property_list_add_string(font_p, "Georgia", "Georgia")
+    obs.obs_property_list_add_string(font_p, "Verdana", "Verdana")
+    obs.obs_property_list_add_string(font_p, "Courier New", "Courier New")
+    obs.obs_property_list_add_string(font_p, "Consolas", "Consolas")
+    obs.obs_property_list_add_string(font_p, "Impact", "Impact")
+    obs.obs_property_list_add_string(font_p, "Comic Sans MS", "Comic Sans MS")
+    obs.obs_property_list_add_string(font_p, "Microsoft YaHei", "Microsoft YaHei")
+    obs.obs_property_list_add_string(font_p, "SimHei", "SimHei")
+    obs.obs_property_list_add_string(font_p, "KaiTi", "KaiTi")
+    obs.obs_property_list_add_string(font_p, "SimSun", "SimSun")
+    obs.obs_property_list_add_string(font_p, "FangSong", "FangSong")
+    obs.obs_property_list_add_string(font_p, get_ui_string("custom_font"), "custom")
     
-    obs.obs_properties_add_text(props, "date_separator", "日期分隔符", obs.OBS_TEXT_DEFAULT)
-    obs.obs_properties_add_text(props, "time_separator", "时间分隔符", obs.OBS_TEXT_DEFAULT)
+    -- 设置字体选择回调
+    obs.obs_property_set_modified_callback(font_p, font_face_callback)
     
-    obs.obs_properties_add_text(props, "prefix", "前缀文本", obs.OBS_TEXT_DEFAULT)
-    obs.obs_properties_add_text(props, "suffix", "后缀文本", obs.OBS_TEXT_DEFAULT)
+    -- 添加自定义字体输入框
+    local custom_font_prop = obs.obs_properties_add_text(props, "custom_font_face", get_ui_string("custom_font"), obs.OBS_TEXT_DEFAULT)
+    -- 默认隐藏自定义字体输入框
+    obs.obs_property_set_visible(custom_font_prop, script_settings.font_face == "custom")
     
-    obs.obs_properties_add_bool(props, "uppercase", "大写显示")
+    obs.obs_properties_add_bool(props, "show_seconds", get_ui_string("show_seconds"))
+    obs.obs_properties_add_bool(props, "show_date", get_ui_string("show_date"))
+    obs.obs_properties_add_bool(props, "show_time", get_ui_string("show_time"))
     
-    local align_p = obs.obs_properties_add_list(props, "alignment", "对齐方式", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
-    obs.obs_property_list_add_string(align_p, "左对齐", "left")
-    obs.obs_property_list_add_string(align_p, "居中", "center")
-    obs.obs_property_list_add_string(align_p, "右对齐", "right")
+    obs.obs_properties_add_text(props, "date_separator", get_ui_string("date_separator"), obs.OBS_TEXT_DEFAULT)
+    obs.obs_properties_add_text(props, "time_separator", get_ui_string("time_separator"), obs.OBS_TEXT_DEFAULT)
+    
+    obs.obs_properties_add_text(props, "prefix", get_ui_string("prefix"), obs.OBS_TEXT_DEFAULT)
+    obs.obs_properties_add_text(props, "suffix", get_ui_string("suffix"), obs.OBS_TEXT_DEFAULT)
+    
+    obs.obs_properties_add_bool(props, "uppercase", get_ui_string("uppercase"))
+    
+    local align_p = obs.obs_properties_add_list(props, "alignment", get_ui_string("alignment"), obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_property_list_add_string(align_p, get_ui_string("left"), "left")
+    obs.obs_property_list_add_string(align_p, get_ui_string("center"), "center")
+    obs.obs_property_list_add_string(align_p, get_ui_string("right"), "right")
     
     return props
 end
 
 function script_update(settings)
+    script_settings.ui_language = obs.obs_data_get_string(settings, "ui_language") or "zh"
+    UI_LANG = script_settings.ui_language
     script_settings.text_source = obs.obs_data_get_string(settings, "text_source")
     script_settings.format_type = obs.obs_data_get_string(settings, "format_type")
     script_settings.custom_format = obs.obs_data_get_string(settings, "custom_format")
@@ -102,7 +244,16 @@ function script_update(settings)
     script_settings.update_interval = obs.obs_data_get_int(settings, "update_interval")
     script_settings.font_size = obs.obs_data_get_int(settings, "font_size")
     script_settings.font_color = obs.obs_data_get_int(settings, "font_color")
-    script_settings.font_face = obs.obs_data_get_string(settings, "font_face")
+    
+    -- 更新字体设置
+    local selected_font = obs.obs_data_get_string(settings, "font_face")
+    if selected_font == "custom" then
+        script_settings.font_face = obs.obs_data_get_string(settings, "custom_font_face") or "Arial"
+    else
+        script_settings.font_face = selected_font
+    end
+    script_settings.custom_font_face = obs.obs_data_get_string(settings, "custom_font_face")
+    
     script_settings.show_seconds = obs.obs_data_get_bool(settings, "show_seconds")
     script_settings.show_date = obs.obs_data_get_bool(settings, "show_date")
     script_settings.show_time = obs.obs_data_get_bool(settings, "show_time")
@@ -118,6 +269,7 @@ function script_update(settings)
 end
 
 function script_defaults(settings)
+    obs.obs_data_set_default_string(settings, "ui_language", "zh")
     obs.obs_data_set_default_string(settings, "text_source", "")
     obs.obs_data_set_default_string(settings, "format_type", "default")
     obs.obs_data_set_default_string(settings, "custom_format", "%Y-%m-%d %H:%M:%S")
@@ -126,6 +278,7 @@ function script_defaults(settings)
     obs.obs_data_set_default_int(settings, "font_size", 48)
     obs.obs_data_set_default_int(settings, "font_color", 0xFFFFFFFF)
     obs.obs_data_set_default_string(settings, "font_face", "Arial")
+    obs.obs_data_set_default_string(settings, "custom_font_face", "")
     obs.obs_data_set_default_bool(settings, "show_seconds", true)
     obs.obs_data_set_default_bool(settings, "show_date", true)
     obs.obs_data_set_default_bool(settings, "show_time", true)
@@ -199,6 +352,17 @@ function update_clock()
         
         local settings = obs.obs_data_create()
         obs.obs_data_set_string(settings, "text", text)
+        
+        local align_value
+        if script_settings.alignment == "left" then
+            align_value = 0
+        elseif script_settings.alignment == "right" then
+            align_value = 2
+        else
+            align_value = 1
+        end
+        obs.obs_data_set_int(settings, "align", align_value)
+        
         obs.obs_source_update(source, settings)
         obs.obs_data_release(settings)
         
