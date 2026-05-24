@@ -1,4 +1,4 @@
--- realtime_clock.lua v1.1.0
+-- realtime_clock.lua v1.1.1
 
 local obs = obslua
 
@@ -152,8 +152,6 @@ function script_properties()
     obs.obs_property_list_add_string(lang_p, "中文", "zh")
     obs.obs_property_list_add_string(lang_p, "English", "en")
     
-    UI_LANG = obs.obs_data_get_string(obs.obs_properties_get_settings(props), "ui_language") or "zh"
-    
     local p = obs.obs_properties_add_list(props, "text_source", get_ui_string("text_source"), obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING)
     local sources = obs.obs_enum_sources()
     if sources ~= nil then
@@ -291,6 +289,11 @@ function script_defaults(settings)
 end
 
 function script_save(settings)
+end
+
+function script_load(settings)
+    script_settings.ui_language = obs.obs_data_get_string(settings, "ui_language") or "zh"
+    UI_LANG = script_settings.ui_language
 end
 
 function script_unload()

@@ -70,7 +70,7 @@ obs_realtime_clock/
 
 ## Version
 
-v1.0.1
+v1.1.1
 
 ## License
 
