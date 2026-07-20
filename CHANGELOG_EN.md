@@ -1,5 +1,26 @@
 # Changelog
 
+## [v1.2.0] - 2026-07-20
+
+### New Features
+- **GEO Multi-Timezone Support**: Added 30+ global major city timezone presets
+  - Asian cities: Beijing, Tokyo, Seoul, Singapore, Hong Kong, Taipei, Bangkok, Ho Chi Minh, Jakarta, Manila, Kuala Lumpur, Mumbai, Bangalore, Karachi, Dubai
+  - European cities: London, Paris, Berlin, Rome, Madrid, Moscow
+  - American cities: New York, Los Angeles, Chicago, Toronto, Vancouver, Sao Paulo
+  - Oceanian cities: Sydney, Auckland
+  - African cities: Cairo, Johannesburg
+- **Custom Timezone Offset**: Support for custom timezone offset from -12 to +14 hours, with 0.5 hour precision
+- **Timezone Label Display**: Option to show timezone abbreviation labels (e.g., CST, EST, JST), with three position options: before, after, newline
+- **SEO Metadata Optimization**: Enhanced script header tags and description with feature keywords for better searchability
+
+### Improvements
+- Refactored timezone calculation logic, unified using UTC base time with offset adjustment
+- Enhanced script description interface with complete bilingual feature list
+- All timezone presets include standard timezone abbreviation labels
+
+### Documentation Updates
+- Synchronized version numbers across all documentation to v1.2.0
+
 ## [v1.1.1] - 2026-05-24
 
 ### Improvements

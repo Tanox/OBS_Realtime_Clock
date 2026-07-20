@@ -1,4 +1,7 @@
--- realtime_clock.lua v1.1.1
+-- realtime_clock.lua v1.2.0
+-- OBS Realtime Clock Script
+-- Tags: clock, time, date, timezone, world clock, countdown, overlay, stream
+-- Features: multi-timezone, custom format, font customization, i18n support
 
 local obs = obslua
 
@@ -17,8 +20,42 @@ local UI_STRINGS = {
         datetime_short = "日期时间 (短)",
         datetime_long = "日期时间 (长)",
         timezone = "时区",
+        timezone_mode = "时区模式",
+        timezone_offset = "时区偏移 (小时)",
         local_tz = "本地时区",
         utc = "UTC",
+        custom_tz = "自定义偏移",
+        city_beijing = "北京 (UTC+8)",
+        city_tokyo = "东京 (UTC+9)",
+        city_seoul = "首尔 (UTC+9)",
+        city_singapore = "新加坡 (UTC+8)",
+        city_hongkong = "香港 (UTC+8)",
+        city_taipei = "台北 (UTC+8)",
+        city_bangkok = "曼谷 (UTC+7)",
+        city_dubai = "迪拜 (UTC+4)",
+        city_moscow = "莫斯科 (UTC+3)",
+        city_london = "伦敦 (UTC+0)",
+        city_paris = "巴黎 (UTC+1)",
+        city_berlin = "柏林 (UTC+1)",
+        city_rome = "罗马 (UTC+1)",
+        city_madrid = "马德里 (UTC+1)",
+        city_newyork = "纽约 (UTC-5)",
+        city_losangeles = "洛杉矶 (UTC-8)",
+        city_chicago = "芝加哥 (UTC-6)",
+        city_toronto = "多伦多 (UTC-5)",
+        city_vancouver = "温哥华 (UTC-8)",
+        city_sydney = "悉尼 (UTC+10)",
+        city_auckland = "奥克兰 (UTC+12)",
+        city_saopaulo = "圣保罗 (UTC-3)",
+        city_cairo = "开罗 (UTC+2)",
+        city_johannesburg = "约翰内斯堡 (UTC+2)",
+        city_mumbai = "孟买 (UTC+5:30)",
+        city_karachi = "卡拉奇 (UTC+5)",
+        city_bangalore = "班加罗尔 (UTC+5:30)",
+        city_ho_chi_minh = "胡志明市 (UTC+7)",
+        city_jakarta = "雅加达 (UTC+7)",
+        city_manila = "马尼拉 (UTC+8)",
+        city_kuala_lumpur = "吉隆坡 (UTC+8)",
         update_interval = "更新间隔 (毫秒)",
         font_size = "字体大小",
         font_color = "字体颜色",
@@ -36,7 +73,12 @@ local UI_STRINGS = {
         left = "左对齐",
         center = "居中",
         right = "右对齐",
-        custom = "自定义格式"
+        custom = "自定义格式",
+        show_timezone_label = "显示时区标签",
+        timezone_label_position = "时区标签位置",
+        label_before = "前面",
+        label_after = "后面",
+        label_newline = "新行"
     },
     ["en"] = {
         text_source = "Text Source",
@@ -50,8 +92,42 @@ local UI_STRINGS = {
         datetime_short = "DateTime (Short)",
         datetime_long = "DateTime (Long)",
         timezone = "Timezone",
+        timezone_mode = "Timezone Mode",
+        timezone_offset = "Timezone Offset (hours)",
         local_tz = "Local Timezone",
         utc = "UTC",
+        custom_tz = "Custom Offset",
+        city_beijing = "Beijing (UTC+8)",
+        city_tokyo = "Tokyo (UTC+9)",
+        city_seoul = "Seoul (UTC+9)",
+        city_singapore = "Singapore (UTC+8)",
+        city_hongkong = "Hong Kong (UTC+8)",
+        city_taipei = "Taipei (UTC+8)",
+        city_bangkok = "Bangkok (UTC+7)",
+        city_dubai = "Dubai (UTC+4)",
+        city_moscow = "Moscow (UTC+3)",
+        city_london = "London (UTC+0)",
+        city_paris = "Paris (UTC+1)",
+        city_berlin = "Berlin (UTC+1)",
+        city_rome = "Rome (UTC+1)",
+        city_madrid = "Madrid (UTC+1)",
+        city_newyork = "New York (UTC-5)",
+        city_losangeles = "Los Angeles (UTC-8)",
+        city_chicago = "Chicago (UTC-6)",
+        city_toronto = "Toronto (UTC-5)",
+        city_vancouver = "Vancouver (UTC-8)",
+        city_sydney = "Sydney (UTC+10)",
+        city_auckland = "Auckland (UTC+12)",
+        city_saopaulo = "Sao Paulo (UTC-3)",
+        city_cairo = "Cairo (UTC+2)",
+        city_johannesburg = "Johannesburg (UTC+2)",
+        city_mumbai = "Mumbai (UTC+5:30)",
+        city_karachi = "Karachi (UTC+5)",
+        city_bangalore = "Bangalore (UTC+5:30)",
+        city_ho_chi_minh = "Ho Chi Minh (UTC+7)",
+        city_jakarta = "Jakarta (UTC+7)",
+        city_manila = "Manila (UTC+8)",
+        city_kuala_lumpur = "Kuala Lumpur (UTC+8)",
         update_interval = "Update Interval (ms)",
         font_size = "Font Size",
         font_color = "Font Color",
@@ -69,7 +145,12 @@ local UI_STRINGS = {
         left = "Left",
         center = "Center",
         right = "Right",
-        custom = "Custom Format"
+        custom = "Custom Format",
+        show_timezone_label = "Show Timezone Label",
+        timezone_label_position = "Label Position",
+        label_before = "Before",
+        label_after = "After",
+        label_newline = "New Line"
     }
 }
 
@@ -99,12 +180,95 @@ local font_presets = {
     ["custom"] = "custom"
 }
 
+local timezone_presets = {
+    { key = "local", label_key = "local_tz", offset = nil, label_short = "" },
+    { key = "utc", label_key = "utc", offset = 0, label_short = "UTC" },
+    { key = "custom", label_key = "custom_tz", offset = nil, label_short = "" },
+    { key = "city_beijing", label_key = "city_beijing", offset = 8, label_short = "CST" },
+    { key = "city_tokyo", label_key = "city_tokyo", offset = 9, label_short = "JST" },
+    { key = "city_seoul", label_key = "city_seoul", offset = 9, label_short = "KST" },
+    { key = "city_singapore", label_key = "city_singapore", offset = 8, label_short = "SGT" },
+    { key = "city_hongkong", label_key = "city_hongkong", offset = 8, label_short = "HKT" },
+    { key = "city_taipei", label_key = "city_taipei", offset = 8, label_short = "CST" },
+    { key = "city_bangkok", label_key = "city_bangkok", offset = 7, label_short = "ICT" },
+    { key = "city_ho_chi_minh", label_key = "city_ho_chi_minh", offset = 7, label_short = "ICT" },
+    { key = "city_jakarta", label_key = "city_jakarta", offset = 7, label_short = "WIB" },
+    { key = "city_manila", label_key = "city_manila", offset = 8, label_short = "PHT" },
+    { key = "city_kuala_lumpur", label_key = "city_kuala_lumpur", offset = 8, label_short = "MYT" },
+    { key = "city_dubai", label_key = "city_dubai", offset = 4, label_short = "GST" },
+    { key = "city_moscow", label_key = "city_moscow", offset = 3, label_short = "MSK" },
+    { key = "city_london", label_key = "city_london", offset = 0, label_short = "GMT" },
+    { key = "city_paris", label_key = "city_paris", offset = 1, label_short = "CET" },
+    { key = "city_berlin", label_key = "city_berlin", offset = 1, label_short = "CET" },
+    { key = "city_rome", label_key = "city_rome", offset = 1, label_short = "CET" },
+    { key = "city_madrid", label_key = "city_madrid", offset = 1, label_short = "CET" },
+    { key = "city_cairo", label_key = "city_cairo", offset = 2, label_short = "EET" },
+    { key = "city_johannesburg", label_key = "city_johannesburg", offset = 2, label_short = "SAST" },
+    { key = "city_mumbai", label_key = "city_mumbai", offset = 5.5, label_short = "IST" },
+    { key = "city_bangalore", label_key = "city_bangalore", offset = 5.5, label_short = "IST" },
+    { key = "city_karachi", label_key = "city_karachi", offset = 5, label_short = "PKT" },
+    { key = "city_newyork", label_key = "city_newyork", offset = -5, label_short = "EST" },
+    { key = "city_chicago", label_key = "city_chicago", offset = -6, label_short = "CST" },
+    { key = "city_losangeles", label_key = "city_losangeles", offset = -8, label_short = "PST" },
+    { key = "city_toronto", label_key = "city_toronto", offset = -5, label_short = "EST" },
+    { key = "city_vancouver", label_key = "city_vancouver", offset = -8, label_short = "PST" },
+    { key = "city_sydney", label_key = "city_sydney", offset = 10, label_short = "AEST" },
+    { key = "city_auckland", label_key = "city_auckland", offset = 12, label_short = "NZST" },
+    { key = "city_saopaulo", label_key = "city_saopaulo", offset = -3, label_short = "BRT" }
+}
+
+local function get_timezone_offset_hours()
+    if script_settings.timezone == "local" then
+        local now = os.time()
+        local utcdate = os.date("!*t", now)
+        local localdate = os.date("*t", now)
+        local diff = os.difftime(os.time(localdate), os.time(utcdate))
+        return diff / 3600
+    elseif script_settings.timezone == "custom" then
+        return script_settings.timezone_offset
+    else
+        for _, tz in ipairs(timezone_presets) do
+            if tz.key == script_settings.timezone then
+                return tz.offset
+            end
+        end
+    end
+    return 0
+end
+
+local function get_timezone_label()
+    if script_settings.timezone == "local" then
+        return ""
+    elseif script_settings.timezone == "custom" then
+        local offset = script_settings.timezone_offset
+        local sign = offset >= 0 and "+" or "-"
+        local abs_offset = math.abs(offset)
+        local hours = math.floor(abs_offset)
+        local minutes = math.floor((abs_offset - hours) * 60)
+        if minutes == 0 then
+            return string.format("UTC%s%d", sign, hours)
+        else
+            return string.format("UTC%s%d:%02d", sign, hours, minutes)
+        end
+    else
+        for _, tz in ipairs(timezone_presets) do
+            if tz.key == script_settings.timezone then
+                return tz.label_short
+            end
+        end
+    end
+    return ""
+end
+
 local script_settings = {
     ui_language = "zh",
     text_source = "",
     format_type = "custom",
     custom_format = "%Y-%m-%d %H:%M:%S",
     timezone = "local",
+    timezone_offset = 8,
+    show_timezone_label = false,
+    timezone_label_position = "after",
     update_interval = 100,
     font_size = 48,
     font_color = 0xFFFFFFFF,
@@ -132,7 +296,47 @@ local format_presets = {
 }
 
 function script_description()
-    return "实时日期时间显示脚本 / Realtime Clock Script\n\n丰富的设置选项，支持自定义格式、时区、字体样式等\nRich settings, custom format, timezone, font styles and more"
+    return "OBS 实时时钟 / OBS Realtime Clock v1.2.0\n\n" ..
+           "功能强大的实时日期时间显示脚本，支持多时区、世界时钟、自定义格式等\n" ..
+           "Powerful realtime date & time display with multi-timezone, world clock, custom formats\n\n" ..
+           "功能特性 | Features:\n" ..
+           "• 30+ 全球城市时区预设 | 30+ global city timezone presets\n" ..
+           "• 自定义时区偏移 | Custom timezone offset\n" ..
+           "• 多种日期/时间格式 | Multiple date/time format presets\n" ..
+           "• 自定义格式支持 | Custom format with strftime specifiers\n" ..
+           "• 15+ 字体预设 + 自定义字体 | 15+ font presets + custom font\n" ..
+           "• 字体颜色和大小可调 | Adjustable font color and size\n" ..
+           "• 前缀/后缀文本 | Prefix/suffix text support\n" ..
+           "• 中英文双语界面 | Bilingual UI (Chinese/English)\n" ..
+           "• 时区标签显示 | Timezone label display\n" ..
+           "• 对齐方式选择 | Text alignment options"
+end
+
+-- 时区选择回调函数，动态显示/隐藏自定义时区偏移输入框
+local function timezone_callback(props, property, settings)
+    local tz = obs.obs_data_get_string(settings, "timezone")
+    local custom_offset_prop = obs.obs_properties_get(props, "timezone_offset")
+    if custom_offset_prop then
+        obs.obs_property_set_visible(custom_offset_prop, tz == "custom")
+    end
+    local label_pos_prop = obs.obs_properties_get(props, "timezone_label_position")
+    local show_label = obs.obs_properties_get(props, "show_timezone_label")
+    if label_pos_prop and show_label then
+        local show_tz_label = obs.obs_data_get_bool(settings, "show_timezone_label")
+        obs.obs_property_set_visible(label_pos_prop, show_tz_label and tz ~= "local")
+    end
+    return true
+end
+
+-- 显示时区标签回调
+local function show_tz_label_callback(props, property, settings)
+    local label_pos_prop = obs.obs_properties_get(props, "timezone_label_position")
+    local tz = obs.obs_data_get_string(settings, "timezone")
+    if label_pos_prop then
+        local show_label = obs.obs_data_get_bool(settings, "show_timezone_label")
+        obs.obs_property_set_visible(label_pos_prop, show_label and tz ~= "local")
+    end
+    return true
 end
 
 -- 字体选择回调函数，用于动态显示/隐藏自定义字体输入框
@@ -178,8 +382,22 @@ function script_properties()
     obs.obs_properties_add_text(props, "custom_format", get_ui_string("custom_format"), obs.OBS_TEXT_DEFAULT)
     
     local tz_p = obs.obs_properties_add_list(props, "timezone", get_ui_string("timezone"), obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
-    obs.obs_property_list_add_string(tz_p, get_ui_string("local_tz"), "local")
-    obs.obs_property_list_add_string(tz_p, get_ui_string("utc"), "utc")
+    for _, tz in ipairs(timezone_presets) do
+        obs.obs_property_list_add_string(tz_p, get_ui_string(tz.label_key), tz.key)
+    end
+    obs.obs_property_set_modified_callback(tz_p, timezone_callback)
+    
+    local tz_offset_prop = obs.obs_properties_add_float(props, "timezone_offset", get_ui_string("timezone_offset"), -12, 14, 0.5)
+    obs.obs_property_set_visible(tz_offset_prop, script_settings.timezone == "custom")
+    
+    obs.obs_properties_add_bool(props, "show_timezone_label", get_ui_string("show_timezone_label"))
+    
+    local label_pos_prop = obs.obs_properties_add_list(props, "timezone_label_position", get_ui_string("timezone_label_position"), obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_property_list_add_string(label_pos_prop, get_ui_string("label_before"), "before")
+    obs.obs_property_list_add_string(label_pos_prop, get_ui_string("label_after"), "after")
+    obs.obs_property_list_add_string(label_pos_prop, get_ui_string("label_newline"), "newline")
+    obs.obs_property_set_modified_callback(obs.obs_properties_get(props, "show_timezone_label"), show_tz_label_callback)
+    obs.obs_property_set_visible(label_pos_prop, script_settings.show_timezone_label and script_settings.timezone ~= "local")
     
     obs.obs_properties_add_int(props, "update_interval", get_ui_string("update_interval"), 50, 5000, 50)
     
@@ -239,6 +457,9 @@ function script_update(settings)
     script_settings.format_type = obs.obs_data_get_string(settings, "format_type")
     script_settings.custom_format = obs.obs_data_get_string(settings, "custom_format")
     script_settings.timezone = obs.obs_data_get_string(settings, "timezone")
+    script_settings.timezone_offset = obs.obs_data_get_double(settings, "timezone_offset")
+    script_settings.show_timezone_label = obs.obs_data_get_bool(settings, "show_timezone_label")
+    script_settings.timezone_label_position = obs.obs_data_get_string(settings, "timezone_label_position")
     script_settings.update_interval = obs.obs_data_get_int(settings, "update_interval")
     script_settings.font_size = obs.obs_data_get_int(settings, "font_size")
     script_settings.font_color = obs.obs_data_get_int(settings, "font_color")
@@ -272,6 +493,9 @@ function script_defaults(settings)
     obs.obs_data_set_default_string(settings, "format_type", "default")
     obs.obs_data_set_default_string(settings, "custom_format", "%Y-%m-%d %H:%M:%S")
     obs.obs_data_set_default_string(settings, "timezone", "local")
+    obs.obs_data_set_default_double(settings, "timezone_offset", 8)
+    obs.obs_data_set_default_bool(settings, "show_timezone_label", false)
+    obs.obs_data_set_default_string(settings, "timezone_label_position", "after")
     obs.obs_data_set_default_int(settings, "update_interval", 100)
     obs.obs_data_set_default_int(settings, "font_size", 48)
     obs.obs_data_set_default_int(settings, "font_color", 0xFFFFFFFF)
@@ -329,13 +553,26 @@ function format_time()
     end
     
     local result
-    if script_settings.timezone == "utc" then
-        result = os.date("!" .. format_str, os.time())
-    else
-        result = os.date(format_str, os.time())
-    end
+    local tz_offset = get_timezone_offset_hours()
+    local utc_time = os.time(os.date("!*t", os.time()))
+    local target_time = utc_time + math.floor(tz_offset * 3600)
+    
+    result = os.date(format_str, target_time)
     
     result = script_settings.prefix .. result .. script_settings.suffix
+    
+    if script_settings.show_timezone_label and script_settings.timezone ~= "local" then
+        local tz_label = get_timezone_label()
+        if tz_label ~= "" then
+            if script_settings.timezone_label_position == "before" then
+                result = tz_label .. " " .. result
+            elseif script_settings.timezone_label_position == "newline" then
+                result = result .. "\n" .. tz_label
+            else
+                result = result .. " " .. tz_label
+            end
+        end
+    end
     
     if script_settings.uppercase then
         result = result:upper()

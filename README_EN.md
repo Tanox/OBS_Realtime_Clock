@@ -7,14 +7,17 @@ A powerful Lua script for OBS Studio that displays real-time date and time with 
 - **Text Source Association**: Link to any text source in your OBS scene
 - **Multiple Format Presets**: Choose from 7 predefined date/time formats
 - **Custom Format Support**: Create your own format using standard date/time specifiers
-- **Timezone Support**: Local timezone or UTC
+- **GEO Multi-Timezone Support**: 30+ global city timezone presets, world clock functionality
+- **Custom Timezone Offset**: Support for custom timezone offset from -12 to +14 hours
+- **Timezone Label Display**: Show timezone abbreviation labels (CST/EST/JST, etc.)
 - **Flexible Update Interval**: 50ms to 5000ms
-- **Visual Customization**: Font size, color, and face
+- **Visual Customization**: Font size, color, and face (15+ font presets + custom font)
 - **Show/Hide Elements**: Toggle seconds, date, and time
 - **Custom Separators**: Modify date and time separators
 - **Prefix/Suffix**: Add custom text before and after the clock
 - **Uppercase Option**: Display text in all caps
 - **Alignment**: Left, center, or right alignment
+- **Bilingual UI**: Chinese/English interface toggle
 
 ## Installation
 
@@ -70,7 +73,7 @@ obs_realtime_clock/
 
 ## Version
 
-v1.1.1
+v1.2.0
 
 ## License
 
