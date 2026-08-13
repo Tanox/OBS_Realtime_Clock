@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.1.2] - 2026-08-13
+
+### Documentation Updates
+- Improved README.md: added configuration reference table, format examples, FAQ and contributing guide
+- Improved README_EN.md: fixed residual Chinese text, added configuration reference, examples, FAQ and contributing guide
+- Improved openspec/project.md: added architecture, compatibility, testing and version management sections
+- Synchronized all documentation version numbers to v1.1.2
+
 ## [v1.1.1] - 2026-05-24
 
 ### Improvements

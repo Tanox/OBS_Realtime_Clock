@@ -1,4 +1,4 @@
--- realtime_clock.lua v1.1.1
+-- realtime_clock.lua v1.1.2
 
 local obs = obslua
 
